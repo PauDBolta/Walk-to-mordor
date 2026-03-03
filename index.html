@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Epic Quest Walk</title>
+
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0b0b12" />
+  <link rel="stylesheet" href="styles.css" />
+
+  <!-- iOS PWA hints -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+
+<body>
+  <div class="bg">
+    <div class="stars"></div>
+    <div class="mist"></div>
+    <div class="embers"></div>
+  </div>
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="sigil" aria-hidden="true"></div>
+      <div>
+        <div class="title">Epic Quest Walk</div>
+        <div class="subtitle">Convierte tus pasos en un viaje legendario</div>
+      </div>
+    </div>
+
+    <div class="top-actions">
+      <button class="iconbtn" id="btnInstall" title="Instalar" aria-label="Instalar">
+        <span>⬇︎</span>
+      </button>
+      <button class="iconbtn" id="btnExport" title="Exportar" aria-label="Exportar">
+        <span>⇪</span>
+      </button>
+      <label class="iconbtn filebtn" title="Importar" aria-label="Importar">
+        <span>⇩</span>
+        <input type="file" id="importFile" accept="application/json" />
+      </label>
+    </div>
+  </header>
+
+  <main class="shell">
+    <nav class="tabs" role="tablist" aria-label="Secciones">
+      <button class="tab active" data-tab="home" role="tab" aria-selected="true">Inicio</button>
+      <button class="tab" data-tab="map" role="tab" aria-selected="false">Mapa</button>
+      <button class="tab" data-tab="story" role="tab" aria-selected="false">Historia</button>
+      <button class="tab" data-tab="log" role="tab" aria-selected="false">Diario</button>
+      <button class="tab" data-tab="settings" role="tab" aria-selected="false">Ajustes</button>
+    </nav>
+
+    <!-- HOME -->
+    <section class="panel active" id="tab-home" role="tabpanel">
+      <div class="hero card">
+        <div class="hero-left">
+          <div class="hero-kicker">Tu progreso</div>
+          <div class="hero-metric">
+            <span class="big" id="doneKm">0.0</span>
+            <span class="unit">km</span>
+            <span class="muted"> / </span>
+            <span class="muted" id="totalKm">2000</span>
+            <span class="muted">km</span>
+          </div>
+
+          <div class="progress-wrap" aria-label="Progreso">
+            <div class="progress">
+              <div class="progress-bar" id="progressBar"></div>
+            </div>
+            <div class="progress-meta">
+              <span id="pct">0.0%</span>
+              <span id="leftKm">Te faltan 0.0 km</span>
+            </div>
+          </div>
+
+          <div class="milestones">
+            <div class="pill">
+              <div class="pill-label">Zona actual</div>
+              <div class="pill-value" id="currentZone">—</div>
+            </div>
+            <div class="pill">
+              <div class="pill-label">Siguiente hito</div>
+              <div class="pill-value" id="nextZone">—</div>
+            </div>
+          </div>
+
+          <div class="cta-row">
+            <button class="btn primary" id="btnAddSteps">Añadir pasos</button>
+            <button class="btn ghost" id="btnQuickStory">Ver capítulo</button>
+          </div>
+        </div>
+
+        <div class="hero-right">
+          <div class="mini-map card-inner">
+            <div class="mini-map-header">
+              <div class="mini-map-title">Ruta</div>
+              <div class="mini-map-sub" id="streakInfo">Racha: 0 días</div>
+            </div>
+            <div class="mini-map-canvas" id="miniMapCanvas"></div>
+            <div class="mini-map-footer">
+              <div class="hint">Instálala en iPhone: Safari → Compartir → “Añadir a pantalla de inicio”.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <div class="card-title">Hoy</div>
+          <div class="stats">
+            <div class="stat">
+              <div class="stat-label">Pasos hoy</div>
+              <div class="stat-value" id="todaySteps">0</div>
+            </div>
+            <div class="stat">
+              <div class="stat-label">Km hoy</div>
+              <div class="stat-value" id="todayKm">0.00</div>
+            </div>
+          </div>
+
+          <div class="row">
+            <label class="label" for="stepsInput">Introduce tus pasos de hoy</label>
+            <div class="inputrow">
+              <input id="stepsInput" type="number" min="0" inputmode="numeric" placeholder="Ej: 8420" />
+              <button class="btn primary small" id="btnSaveToday">Guardar</button>
+            </div>
+            <div class="row-actions">
+              <button class="btn ghost small" id="btnUndoToday">Deshacer hoy</button>
+              <button class="btn danger small" id="btnResetAll">Reiniciar todo</button>
+            </div>
+            <div class="hint">Tip: mira tus pasos en Salud y escríbelos aquí.</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Evento del día</div>
+          <div class="event" id="dailyEventBox">
+            <div class="event-title" id="dailyEventTitle">—</div>
+            <div class="event-text" id="dailyEventText">—</div>
+            <div class="event-meta" id="dailyEventMeta">—</div>
+          </div>
+          <div class="row-actions">
+            <button class="btn ghost small" id="btnNewEvent">Generar otro</button>
+          </div>
+          <div class="hint">Los eventos son narración original y se guardan por día.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MAP -->
+    <section class="panel" id="tab-map" role="tabpanel">
+      <div class="card mapcard">
+        <div class="mapheader">
+          <div>
+            <div class="card-title">Mapa del viaje</div>
+            <div class="hint">Desliza horizontalmente. Los hitos se desbloquean al llegar a sus km.</div>
+          </div>
+          <div class="maplegend">
+            <span class="dot done"></span> Hecho
+            <span class="dot now"></span> Actual
+            <span class="dot lock"></span> Bloqueado
+          </div>
+        </div>
+
+        <div class="mapwrap" id="mapWrap" tabindex="0" aria-label="Mapa desplazable">
+          <div class="mapstage" id="mapStage">
+            <!-- injected by JS -->
+          </div>
+        </div>
+
+        <div class="mapfooter">
+          <button class="btn ghost small" id="btnJumpNow">Ir a mi posición</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- STORY -->
+    <section class="panel" id="tab-story" role="tabpanel">
+      <div class="card">
+        <div class="card-title">Historia</div>
+        <div class="hint">Capítulos desbloqueables: cada zona tiene escenas que se abren al alcanzar km.</div>
+
+        <div class="story-top">
+          <div class="zone-badge" id="storyZoneBadge">—</div>
+          <div class="zone-meta" id="storyZoneMeta">—</div>
+        </div>
+
+        <div class="story-illustration" id="storyIllustration" aria-hidden="true"></div>
+
+        <div class="chapters" id="chaptersList">
+          <!-- injected by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- LOG -->
+    <section class="panel" id="tab-log" role="tabpanel">
+      <div class="card">
+        <div class="card-title">Diario</div>
+        <div class="hint">Historial de días guardados. La racha cuenta días consecutivos con pasos > 0.</div>
+
+        <div class="loggrid">
+          <div class="logstat">
+            <div class="label">Total pasos</div>
+            <div class="big2" id="totalSteps">0</div>
+          </div>
+          <div class="logstat">
+            <div class="label">Días registrados</div>
+            <div class="big2" id="daysLogged">0</div>
+          </div>
+          <div class="logstat">
+            <div class="label">Racha</div>
+            <div class="big2" id="streak">0</div>
+          </div>
+        </div>
+
+        <div class="list" id="historyList"></div>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section class="panel" id="tab-settings" role="tabpanel">
+      <div class="card">
+        <div class="card-title">Ajustes</div>
+
+        <div class="form">
+          <div class="field">
+            <label class="label" for="totalKmInput">Distancia total del viaje (km)</label>
+            <input id="totalKmInput" type="number" min="1" inputmode="decimal" placeholder="2000" />
+            <div class="hint">Si quieres un reto más corto/largo, cambia esta distancia.</div>
+          </div>
+
+          <div class="field">
+            <label class="label" for="strideInput">Longitud de zancada (m)</label>
+            <input id="strideInput" type="number" min="0.2" max="2" step="0.01" inputmode="decimal" placeholder="0.70" />
+            <div class="hint">Conversión: km = pasos × zancada / 1000.</div>
+          </div>
+
+          <div class="field">
+            <label class="label">Modo de entrada</label>
+            <div class="seg">
+              <button class="segbtn active" data-mode="steps">Pasos</button>
+              <button class="segbtn" data-mode="km">Km</button>
+            </div>
+            <div class="hint">Si eliges “Km”, podrás introducir km diarios directamente.</div>
+          </div>
+
+          <div class="row-actions">
+            <button class="btn primary" id="btnSaveSettings">Guardar ajustes</button>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="card-title">Ayuda rápida</div>
+        <ul class="help">
+          <li><b>En iPhone:</b> abre la web en Safari → Compartir → “Añadir a pantalla de inicio”.</li>
+          <li><b>Datos:</b> se guardan en el dispositivo (localStorage). Exporta si vas a cambiar de móvil.</li>
+          <li><b>Gratis:</b> sin Salud automática; introduces pasos o km manualmente.</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal: Add Steps -->
+  <div class="modal" id="modal">
+    <div class="modal-card">
+      <div class="modal-head">
+        <div>
+          <div class="modal-title" id="modalTitle">Añadir</div>
+          <div class="modal-sub" id="modalSub">Guarda tu progreso de hoy</div>
+        </div>
+        <button class="iconbtn" id="btnCloseModal" aria-label="Cerrar">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <label class="label" id="modalLabel" for="modalInput">Pasos</label>
+        <input id="modalInput" type="number" min="0" inputmode="numeric" placeholder="Ej: 8420" />
+
+        <div class="hint" id="modalHint">
+          Consejo: mira tus pasos en Salud y pégalos aquí.
+        </div>
+
+        <div class="row-actions">
+          <button class="btn primary" id="btnModalSave">Guardar</button>
+          <button class="btn ghost" id="btnModalCancel">Cancelar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
